@@ -52,17 +52,40 @@ The user wants to write a status update / standup post / weekly summary of their
    - `(2)` What's next — bullets
    - `(3)` Blockers / help needed — bullets, with reviews-needed PRs called out
 
-7. **Disclaimer**. End with an italic line noting Claude generated it and what data sources were used. Be specific: "looked at git log, GitHub PRs, reviews, and comments from the past N days".
+7. **Self-check the formatting** before presenting the draft:
+   - Grep your own output for `http` — every URL must be wrapped in `<url|display text>` with an opening `<` and closing `>`. A bare URL or a half-wrapped one like `https://...|#1432` is a bug.
+   - Every themed sub-header must start and end with a single `*` (e.g. `*Smoke testing*`). Plain-text headers render as plain text in Slack, not bold.
+   - No `---` horizontal rules anywhere — they blow up the API with `invalid_blocks`.
+   - No `a.`/`i.`/`ii.` nested ordered lists — Slack mangles them. Use `•` flat bullets under bold headers instead.
+   - Every PR/issue number you mention must come from the `pull_activity.py` output. Do not invent numbers. If in doubt, run `gh pr view N --repo OWNER/REPO` or `gh issue view N --repo OWNER/REPO` to confirm it exists and is what you think it is.
+
+8. **Disclaimer**. End with an italic line noting Claude generated it and what data sources were used. Be specific: "looked at git log, GitHub PRs, reviews, and comments from the past N days".
 
 ## Slack formatting (lessons learned)
 
-- Use `*bold*` for section headers (single asterisk, not double).
-- Use `•` for bullets (not `-` or `*` — those can be parsed as italic/bold).
-- Use Slack link syntax: `<https://example.com|display text>`. Plain `#1442` references don't auto-link.
-- **Avoid nested ordered lists** (`a.` / `i.` / `ii.`). Slack's API renderer mangles them. Flat bullets under bold headers render cleanly.
-- Avoid horizontal rules (`---`) — they trigger `invalid_blocks` errors via the API.
-- Em dashes (`—`) are fine.
-- Vary the link text naturally rather than repeating "this PR" everywhere — e.g. `<url|the mlrc_bench fixes>`, `<url|configurable preset system>`.
+These are the exact rules the Slack API's renderer enforces. Getting any of them wrong makes the post look bad or fails the API call.
+
+**Links**: use `<https://example.com|display text>`.
+- ✅ `<https://github.com/o/r/pull/1432|this PR>`
+- ❌ `https://github.com/o/r/pull/1432` (renders as a bare URL — no hyperlink text)
+- ❌ `https://github.com/o/r/pull/1432|#1432` (missing `<...>` — renders as broken text)
+- ❌ `[this PR](https://...)` (Markdown syntax — Slack doesn't support it)
+
+**Bold section headers**: single asterisks, no double.
+- ✅ `*Smoke testing*`
+- ❌ `**Smoke testing**` (double asterisks render literally, no bold)
+- ❌ `Smoke testing` (plain text — no visual hierarchy)
+
+**Bullets**: use `•` (U+2022).
+- ✅ `• Did the thing`
+- ❌ `- Did the thing` (may render as italic/strikethrough)
+- ❌ `* Did the thing` (may render as bold)
+
+**Never use**:
+- `---` horizontal rules (trigger `invalid_blocks` via the API)
+- Nested ordered lists like `a.` / `i.` / `ii.` (mangled on render)
+
+**Vary link text naturally** — don't repeat "this PR" every line. Prefer descriptive text: `<url|the mlrc_bench smoke fixes>`, `<url|configurable preset system>`, `<url|the xfail test for get_model>`.
 
 ## Posting
 
